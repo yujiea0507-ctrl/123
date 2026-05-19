@@ -63,14 +63,14 @@
         </div>
     </div>
 
-    <script>
+        <script>
         const { createApp } = Vue;
         createApp({
             data() { return { 
                 form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
                 coins: { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 },
                 showModal: false,
-                dailyData: [] 
+                dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]') // 讀取記錄
             }},
             methods: {
                 calcCash() {
@@ -81,11 +81,13 @@
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
                     this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
+                    localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); // 儲存記錄
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
                     this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 }
             }
         }).mount('#app')
     </script>
+
 </body>
 </html>
