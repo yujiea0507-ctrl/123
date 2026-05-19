@@ -32,19 +32,19 @@
             </div>
         </div>
 
-        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div class="bg-white p-6 rounded-2xl w-full max-w-sm">
-                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算 (張數/個數)</h3>
-                <div class="grid grid-cols-2 gap-3 text-sm">
-                    <div class="flex items-center gap-2">1000元 <input v-model.number="coins.c1000" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">500元 <input v-model.number="coins.c500" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">100元 <input v-model.number="coins.c100" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">50元 <input v-model.number="coins.c50" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">10元 <input v-model.number="coins.c10" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">5元 <input v-model.number="coins.c5" type="number" class="w-full p-1 border rounded"></div>
-                    <div class="flex items-center gap-2">1元 <input v-model.number="coins.c1" type="number" class="w-full p-1 border rounded"></div>
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
+            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
+                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算</h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center justify-between">1000 <input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">500 <input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">100 <input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">50 <input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">10 <input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">5 <input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">1 <input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
                 </div>
-                <button @click="calcCash" class="w-full mt-6 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
+                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
             </div>
         </div>
 
