@@ -22,19 +22,23 @@
                 <input v-model.number="form.lp" type="number" class="p-2 border rounded">
                 <label class="text-xs text-gray-500">全支付</label><span></span>
                 <input v-model.number="form.allpay" type="number" class="p-2 border rounded">
-                <label class="text-xs text-gray-500 col-span-2">交班實際總金額 (結帳用)</label>
+                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" type="number" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
-                <button @click="addData" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並計算帳差</button>
+                <button @click="addData" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
             </div>
         </div>
 
         <div class="space-y-4">
             <div v-for="day in dailyData" :key="day.date" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
-                <div class="flex justify-between font-bold mb-2 text-[#6F4E37]">
-                    <span>{{ day.date }}</span>
-                    <span>帳差: {{ day.diff }}</span>
+                <div class="flex justify-between font-bold mb-3 border-b pb-2">
+                    <span class="text-[#6F4E37]">{{ day.date }}</span>
+                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
                 </div>
-                <div class="text-xs text-gray-500">系統總計: {{ day.total }} / 實際交班: {{ day.actual }}</div>
+                <div class="grid grid-cols-2 gap-y-1 text-sm text-gray-600">
+                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
+                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
+                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
+                </div>
             </div>
         </div>
     </div>
