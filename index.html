@@ -20,56 +20,61 @@
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
                 </div>
-                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
                 <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
                 <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
-                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
                 <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
                 <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
-                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
                 <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
             </div>
         </div>
 
-        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
-            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
-                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算 (張數/個數)</h3>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="flex items-center justify-between">1000 元 <input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">500 元 <input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">100 元 <input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">50 元 <input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">10 元 <input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">5 元 <input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">1 元 <input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
-                </div>
-                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
+        <div v-for="(monthData, month) in groupedData" :key="month" class="mb-6">
+            <h2 class="font-bold text-lg text-[#6F4E37] mb-2 px-2">{{ month }}</h2>
+            <div class="space-y-3">
+                <details v-for="(day, index) in monthData" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
+                    <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
+                        <div>
+                            {{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span>
+                        </div>
+                        <div class="text-right text-xs">
+                            <span class="block">營業額: {{ day.total }}</span>
+                            <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
+                        </div>
+                    </summary>
+                    <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2 border-t pt-3">
+                        <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
+                        <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
+                        <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
+                        <div class="flex gap-4 mt-2 col-span-2">
+                            <button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button>
+                            <button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button>
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
 
-        <div class="space-y-4">
-            <details v-for="(day, index) in dailyData" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
-                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                    <span>{{ day.date }} <span class="text-xs font-normal text-gray-400">{{ day.time }}</span></span>
-                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
-                </summary>
-                <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2">
-                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
-                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
-                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
-                    <div class="flex gap-4 mt-2 col-span-2">
-                        <button @click="editEntry(index)" class="text-blue-600 underline">編輯</button>
-                        <button @click="deleteEntry(index)" class="text-red-600 underline">刪除</button>
-                    </div>
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
+            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
+                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算</h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center justify-between">1000元<input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">500元<input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">100元<input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">50元<input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">10元<input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">5元<input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">1元<input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
                 </div>
-            </details>
+                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
+            </div>
         </div>
     </div>
 
     <script>
         const { createApp } = Vue;
-        const PWD = '0000'; // 統一密碼設定
+        const PWD = '0000';
         createApp({
             data() { return { 
                 form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
@@ -78,10 +83,20 @@
                 dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]'),
                 editIndex: null
             }},
+            computed: {
+                groupedData() {
+                    const groups = {};
+                    this.dailyData.forEach((item, index) => {
+                        const month = item.date.split('/').slice(0, 2).join('/'); // 取 YYYY/MM
+                        if (!groups[month]) groups[month] = [];
+                        groups[month].push({ ...item, originalIndex: index });
+                    });
+                    return groups;
+                }
+            },
             methods: {
                 verifyAndSave() {
-                    const pass = prompt("請輸入管理密碼：");
-                    if (pass === PWD) { this.addData(); } else { alert("密碼錯誤！"); }
+                    if (prompt("輸入管理密碼：") === PWD) { this.addData(); } else { alert("密碼錯誤"); }
                 },
                 calcCash() {
                     this.form.cash = (this.coins.c1000*1000) + (this.coins.c500*500) + (this.coins.c100*100) + (this.coins.c50*50) + (this.coins.c10*10) + (this.coins.c5*5) + (this.coins.c1*1);
@@ -90,33 +105,25 @@
                 addData() {
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
-                    const now = new Date();
-                    const dateStr = now.toLocaleDateString();
-                    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-
                     if (this.editIndex !== null) {
                         this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date, time: this.dailyData[this.editIndex].time };
                         this.editIndex = null;
-                        alert("修改成功！");
                     } else {
-                        this.dailyData.unshift({ ...this.form, total, diff, date: dateStr, time: timeStr });
+                        const now = new Date();
+                        this.dailyData.unshift({ ...this.form, total, diff, date: now.toLocaleDateString(), time: now.getHours()+':'+now.getMinutes().toString().padStart(2,'0') });
                     }
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
-                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 },
                 deleteEntry(index) {
-                    if (prompt("輸入密碼以刪除：") === PWD) {
-                        this.dailyData.splice(index, 1);
-                        localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
-                    } else { alert("密碼錯誤"); }
+                    if (prompt("輸入密碼以刪除：") === PWD) { this.dailyData.splice(index, 1); localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); }
                 },
                 editEntry(index) {
                     if (prompt("輸入密碼以編輯：") === PWD) {
                         this.form = { ...this.dailyData[index] };
                         this.editIndex = index;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else { alert("密碼錯誤"); }
+                    }
                 }
             }
         }).mount('#app')
