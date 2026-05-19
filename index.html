@@ -20,16 +20,31 @@
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
                 </div>
-                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
-                <input v-model.number="form.panda" type="number" class="p-2 border rounded">
-                <input v-model.number="form.uber" type="number" class="p-2 border rounded">
-                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
-                <input v-model.number="form.lp" type="number" class="p-2 border rounded">
-                <input v-model.number="form.allpay" type="number" class="p-2 border rounded">
-                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
-                <input v-model.number="form.actual" type="number" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
-                <button @click="addData" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
+                <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
+                <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
+                <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
+                <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
+                <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
+                <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
             </div>
+        </div>
+
+        <div class="space-y-4">
+            <details v-for="(day, index) in dailyData" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
+                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
+                    <span>{{ day.date }}</span>
+                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
+                </summary>
+                <div class="p-4 pt-0 text-sm text-gray-600">
+                    <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
+                    <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
+                    <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
+                    <div class="flex gap-2 mt-3">
+                        <button @click="editEntry(index)" class="text-blue-600 underline">編輯</button>
+                        <button @click="deleteEntry(index)" class="text-red-600 underline">刪除</button>
+                    </div>
+                </div>
+            </details>
         </div>
 
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
@@ -47,32 +62,23 @@
                 <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
             </div>
         </div>
-
-        <div class="space-y-4">
-            <details v-for="day in dailyData" :key="day.date" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
-                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                    <span>{{ day.date }}</span>
-                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">總額: {{ day.total }} | 帳差: {{ day.diff }}</span>
-                </summary>
-                <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2">
-                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
-                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
-                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
-                </div>
-            </details>
-        </div>
     </div>
 
-        <script>
+    <script>
         const { createApp } = Vue;
         createApp({
             data() { return { 
                 form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
                 coins: { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 },
                 showModal: false,
-                dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]') // 讀取記錄
+                dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]'),
+                editIndex: null
             }},
             methods: {
+                verifyAndSave() {
+                    const pass = prompt("請輸入管理密碼：");
+                    if (pass === '03040507') { this.addData(); } else { alert("密碼錯誤！"); }
+                },
                 calcCash() {
                     this.form.cash = (this.coins.c1000*1000) + (this.coins.c500*500) + (this.coins.c100*100) + (this.coins.c50*50) + (this.coins.c10*10) + (this.coins.c5*5) + (this.coins.c1*1);
                     this.showModal = false;
@@ -80,14 +86,30 @@
                 addData() {
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
-                    this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
-                    localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); // 儲存記錄
+                    if (this.editIndex !== null) {
+                        this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date };
+                        this.editIndex = null;
+                    } else {
+                        this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
+                    }
+                    localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
-                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
+                },
+                deleteEntry(index) {
+                    if (prompt("輸入密碼以刪除：") === '03040507') {
+                        this.dailyData.splice(index, 1);
+                        localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
+                    }
+                },
+                editEntry(index) {
+                    if (prompt("輸入密碼以編輯：") === '03040507') {
+                        this.form = { ...this.dailyData[index] };
+                        this.editIndex = index;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 }
             }
         }).mount('#app')
     </script>
-
 </body>
 </html>
