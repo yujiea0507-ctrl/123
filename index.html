@@ -15,12 +15,11 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-2">
-                    <label class="text-xs text-gray-500">現金總額 (點按計算)</label>
+                    <label class="text-xs text-gray-500">現金總額</label>
                     <button @click="showModal = true" class="w-full p-3 bg-[#EBE3D5] rounded-lg font-bold text-[#6F4E37] border-2 border-[#6F4E37]">
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
                 </div>
-                
                 <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
                 <input v-model.number="form.panda" type="number" class="p-2 border rounded">
                 <input v-model.number="form.uber" type="number" class="p-2 border rounded">
@@ -35,30 +34,30 @@
 
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div class="bg-white p-6 rounded-2xl w-full max-w-sm">
-                <h3 class="font-bold mb-4 text-[#6F4E37]">現金點算</h3>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <input v-model.number="coins.c1000" type="number" placeholder="1000元" class="p-1 border rounded">
-                    <input v-model.number="coins.c500" type="number" placeholder="500元" class="p-1 border rounded">
-                    <input v-model.number="coins.c100" type="number" placeholder="100元" class="p-1 border rounded">
-                    <input v-model.number="coins.c50" type="number" placeholder="50元" class="p-1 border rounded">
-                    <input v-model.number="coins.c10" type="number" placeholder="10元" class="p-1 border rounded">
-                    <input v-model.number="coins.c5" type="number" placeholder="5元" class="p-1 border rounded">
-                    <input v-model.number="coins.c1" type="number" placeholder="1元" class="p-1 border rounded">
+                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算 (張數/個數)</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="flex items-center gap-2">1000元 <input v-model.number="coins.c1000" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">500元 <input v-model.number="coins.c500" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">100元 <input v-model.number="coins.c100" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">50元 <input v-model.number="coins.c50" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">10元 <input v-model.number="coins.c10" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">5元 <input v-model.number="coins.c5" type="number" class="w-full p-1 border rounded"></div>
+                    <div class="flex items-center gap-2">1元 <input v-model.number="coins.c1" type="number" class="w-full p-1 border rounded"></div>
                 </div>
-                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-2 rounded-lg font-bold">確認金額</button>
+                <button @click="calcCash" class="w-full mt-6 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
             </div>
         </div>
 
         <div class="space-y-4">
-            <details v-for="day in dailyData" :key="day.date" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5] overflow-hidden">
+            <details v-for="day in dailyData" :key="day.date" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
                 <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
                     <span>{{ day.date }}</span>
                     <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">總額: {{ day.total }} | 帳差: {{ day.diff }}</span>
                 </summary>
-                <div class="p-4 pt-0 text-sm text-gray-600">
-                    <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
-                    <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
-                    <p class="font-bold text-[#6F4E37] pt-2">實際交班: {{ day.actual }}</p>
+                <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2">
+                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
+                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
+                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
                 </div>
             </details>
         </div>
