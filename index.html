@@ -14,13 +14,18 @@
 
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
             <div class="grid grid-cols-2 gap-3">
-                <label class="text-xs text-gray-500">現金</label><label class="text-xs text-gray-500">熊貓</label>
-                <input v-model.number="form.cash" type="number" class="p-2 border rounded">
+                <div class="col-span-2">
+                    <label class="text-xs text-gray-500">現金總額 (點按計算)</label>
+                    <button @click="showModal = true" class="w-full p-3 bg-[#EBE3D5] rounded-lg font-bold text-[#6F4E37] border-2 border-[#6F4E37]">
+                        {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
+                    </button>
+                </div>
+                
+                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
                 <input v-model.number="form.panda" type="number" class="p-2 border rounded">
-                <label class="text-xs text-gray-500">UBER</label><label class="text-xs text-gray-500">LinePay</label>
                 <input v-model.number="form.uber" type="number" class="p-2 border rounded">
+                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
                 <input v-model.number="form.lp" type="number" class="p-2 border rounded">
-                <label class="text-xs text-gray-500">全支付</label><span></span>
                 <input v-model.number="form.allpay" type="number" class="p-2 border rounded">
                 <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" type="number" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
@@ -28,16 +33,32 @@
             </div>
         </div>
 
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="bg-white p-6 rounded-2xl w-full max-w-sm">
+                <h3 class="font-bold mb-4 text-[#6F4E37]">現金點算</h3>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <input v-model.number="coins.c1000" type="number" placeholder="1000元" class="p-1 border rounded">
+                    <input v-model.number="coins.c500" type="number" placeholder="500元" class="p-1 border rounded">
+                    <input v-model.number="coins.c100" type="number" placeholder="100元" class="p-1 border rounded">
+                    <input v-model.number="coins.c50" type="number" placeholder="50元" class="p-1 border rounded">
+                    <input v-model.number="coins.c10" type="number" placeholder="10元" class="p-1 border rounded">
+                    <input v-model.number="coins.c5" type="number" placeholder="5元" class="p-1 border rounded">
+                    <input v-model.number="coins.c1" type="number" placeholder="1元" class="p-1 border rounded">
+                </div>
+                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-2 rounded-lg font-bold">確認金額</button>
+            </div>
+        </div>
+
         <div class="space-y-4">
             <details v-for="day in dailyData" :key="day.date" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5] overflow-hidden">
-                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37] outline-none">
+                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
                     <span>{{ day.date }}</span>
                     <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">總額: {{ day.total }} | 帳差: {{ day.diff }}</span>
                 </summary>
-                <div class="p-4 pt-0 border-t border-[#EBE3D5] text-sm text-gray-600 grid grid-cols-2 gap-y-1">
-                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
-                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
-                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
+                <div class="p-4 pt-0 text-sm text-gray-600">
+                    <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
+                    <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
+                    <p class="font-bold text-[#6F4E37] pt-2">實際交班: {{ day.actual }}</p>
                 </div>
             </details>
         </div>
@@ -46,13 +67,23 @@
     <script>
         const { createApp } = Vue;
         createApp({
-            data() { return { form: { cash: '', panda: '', uber: '', lp: '', allpay: '', actual: '' }, dailyData: [] } },
+            data() { return { 
+                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
+                coins: { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 },
+                showModal: false,
+                dailyData: [] 
+            }},
             methods: {
+                calcCash() {
+                    this.form.cash = (this.coins.c1000*1000) + (this.coins.c500*500) + (this.coins.c100*100) + (this.coins.c50*50) + (this.coins.c10*10) + (this.coins.c5*5) + (this.coins.c1*1);
+                    this.showModal = false;
+                },
                 addData() {
-                    const total = (this.form.cash || 0) + (this.form.panda || 0) + (this.form.uber || 0) + (this.form.lp || 0) + (this.form.allpay || 0);
-                    const diff = (this.form.actual || 0) - total;
+                    const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
+                    const diff = this.form.actual - total;
                     this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
-                    this.form = { cash: '', panda: '', uber: '', lp: '', allpay: '', actual: '' };
+                    this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
+                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 }
             }
         }).mount('#app')
