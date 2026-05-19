@@ -3,154 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>店務對帳系統</title>
+    <title>店務 ERP 系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>body { background-color: #FDFBF7; color: #4A3F35; }</style>
 </head>
 <body>
-    <div id="app" class="max-w-md mx-auto p-4 min-h-screen">
-        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">每日對帳輸入</h1></header>
+    <div id="app" class="max-w-md mx-auto p-4 min-h-screen pb-20">
+        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">店務管理 ERP</h1></header>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-500">現金總額</label>
-                    <button @click="showModal = true" class="w-full p-3 bg-[#EBE3D5] rounded-lg font-bold text-[#6F4E37] border-2 border-[#6F4E37]">
+        <div class="flex bg-white p-1 rounded-xl shadow-sm mb-6 border border-[#EBE3D5]">
+            <button @click="currentTab = 'daily'" :class="currentTab === 'daily' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">每日對帳</button>
+            <button @click="currentTab = 'ab'" :class="currentTab === 'ab' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">A/B庫存</button>
+        </div>
+
+        <div v-if="currentTab === 'daily'">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <button @click="showModal = true" class="col-span-2 p-3 bg-[#EBE3D5] rounded-lg font-bold text-[#6F4E37] border-2 border-[#6F4E37]">
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
+                    <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
+                    <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
+                    <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
+                    <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
+                    <input v-model.number="form.actual" placeholder="實際總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
+                    <input v-model="form.note" placeholder="備註..." class="p-2 border rounded col-span-2">
+                    <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
                 </div>
-                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
-                <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
-                <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
-                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
-                <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
-                <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
-                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
-                <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
-                <label class="text-xs text-gray-500 col-span-2">備註 (選填)</label>
-                <input v-model="form.note" placeholder="例如：少拿零錢..." class="p-2 border rounded col-span-2">
-                
-                <p v-if="Math.abs(form.actual - (form.cash + form.panda + form.uber + form.lp + form.allpay)) > 500 && form.actual > 0" 
-                   class="col-span-2 text-red-500 text-xs font-bold text-center">⚠️ 注意：帳差較大，請核對金額！</p>
-                
-                <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
+            </div>
+            </div>
+
+        <div v-if="currentTab === 'ab'">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5]">
+                <h2 class="font-bold text-[#6F4E37] mb-4 border-b pb-2">A表：庫存物料管理</h2>
+                <div v-for="(item, index) in inventory" :key="index" class="grid grid-cols-3 gap-2 mb-3 items-center">
+                    <span class="text-sm font-bold truncate">{{ item.name }}</span>
+                    <input v-model.number="item.used" type="number" placeholder="用量" class="p-1 border rounded text-center">
+                    <span class="text-xs text-gray-500">剩 {{ item.stock - item.used }}</span>
+                </div>
+                <button @click="saveInventory" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">更新庫存</button>
             </div>
         </div>
 
-        <div v-for="(data, month) in groupedData" :key="month" class="mb-8">
-            <div class="bg-[#6F4E37] text-white p-4 rounded-xl mb-3 shadow-md">
-                <h2 class="font-bold text-xl mb-2">{{ month }} 月統計</h2>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm opacity-90">
-                    <p>現金: {{ data.cash }}</p> <p>熊貓: {{ data.panda }}</p>
-                    <p>UBER: {{ data.uber }}</p> <p>LinePay: {{ data.lp }}</p>
-                    <p>全支付: {{ data.allpay }}</p> <p class="font-bold text-white border-t border-white/30 pt-1">總收入: {{ data.total }}</p>
-                </div>
-            </div>
-            <div class="space-y-3">
-                <details v-for="(day, index) in data.entries" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
-                    <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                        <div>{{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span></div>
-                        <div class="text-right text-xs"><span class="block">營收: {{ day.total }}</span><span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span></div>
-                    </summary>
-                    <div class="p-4 pt-0 text-sm text-gray-600 border-t pt-3">
-                        <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
-                        <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
-                        <p class="font-bold text-[#6F4E37] mt-1">實際: {{ day.actual }}</p>
-                        <p v-if="day.note" class="text-xs text-gray-400 mt-1 italic">備註: {{ day.note }}</p>
-                        <div class="flex gap-4 mt-3"><button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button><button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button></div>
-                    </div>
-                </details>
-            </div>
-        </div>
-
-        <button @click="exportCSV" class="w-full mt-4 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出所有資料為 CSV (Excel)</button>
-
-        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
-            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
-                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算</h3>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="flex items-center justify-between">1000元<input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">500元<input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">100元<input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">50元<input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">10元<input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">5元<input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">1元<input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
-                </div>
-                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
-            </div>
-        </div>
+        <button @click="exportCSV" class="w-full mt-6 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出 CSV 報表</button>
     </div>
 
     <script>
         const { createApp } = Vue;
-        const PWD = '0000';
         createApp({
             data() { return { 
-                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' }, 
-                coins: { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 },
-                showModal: false,
-                dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]'),
-                editIndex: null
+                currentTab: 'daily',
+                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' },
+                inventory: [
+                    { name: '三角骨', stock: 100, used: 0 },
+                    { name: '鹽酥雞', stock: 100, used: 0 },
+                    { name: '魷魚圈', stock: 80, used: 0 },
+                    { name: '八盎司', stock: 50, used: 0 },
+                    { name: '花蟹', stock: 30, used: 0 }
+                ],
+                dailyData: JSON.parse(localStorage.getItem('dailyData') || '[]'),
+                showModal: false
             }},
-            computed: {
-                groupedData() {
-                    const groups = {};
-                    this.dailyData.forEach((item, index) => {
-                        const month = item.date.split('/').slice(0, 2).join('/');
-                        if (!groups[month]) groups[month] = { total: 0, cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, entries: [] };
-                        groups[month].entries.push({ ...item, originalIndex: index });
-                        groups[month].total += item.total;
-                        groups[month].cash += item.cash;
-                        groups[month].panda += item.panda;
-                        groups[month].uber += item.uber;
-                        groups[month].lp += item.lp;
-                        groups[month].allpay += item.allpay;
-                    });
-                    return groups;
-                }
-            },
             methods: {
-                verifyAndSave() { if (prompt("輸入密碼：") === PWD) { this.addData(); } else { alert("密碼錯誤"); } },
-                calcCash() {
-                    this.form.cash = (this.coins.c1000*1000) + (this.coins.c500*500) + (this.coins.c100*100) + (this.coins.c50*50) + (this.coins.c10*10) + (this.coins.c5*5) + (this.coins.c1*1);
-                    this.showModal = false;
-                },
-                addData() {
-                    const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
-                    const diff = this.form.actual - total;
-                    if (this.editIndex !== null) {
-                        this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date, time: this.dailyData[this.editIndex].time };
-                        this.editIndex = null;
-                    } else {
+                verifyAndSave() { 
+                    if (prompt("輸入密碼：") === '0000') {
+                        const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                         const now = new Date();
-                        this.dailyData.unshift({ ...this.form, total, diff, date: now.toLocaleDateString(), time: now.getHours()+':'+now.getMinutes().toString().padStart(2,'0') });
+                        this.dailyData.unshift({ ...this.form, total, diff: this.form.actual - total, date: now.toLocaleDateString(), time: now.getHours()+':'+now.getMinutes() });
+                        localStorage.setItem('dailyData', JSON.stringify(this.dailyData));
+                        this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' };
+                        alert("記錄成功！");
                     }
-                    localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
-                    this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' };
-                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
+                },
+                saveInventory() {
+                    localStorage.setItem('inventoryData', JSON.stringify(this.inventory));
+                    alert("庫存已更新！");
                 },
                 exportCSV() {
-                    let csv = '\ufeff' + '日期,時間,現金,熊貓,UBER,LinePay,全支付,總收入,實際,帳差,備註\n';
-                    this.dailyData.forEach(d => {
-                        const note = (d.note || '').replace(/,/g, '，');
-                        csv += `${d.date},${d.time},${d.cash},${d.panda},${d.uber},${d.lp},${d.allpay},${d.total},${d.actual},${d.diff},${note}\n`;
-                    });
+                    let csv = '\ufeff' + '日期,時間,現金,總收入,實際,帳差,備註\n';
+                    this.dailyData.forEach(d => csv += `${d.date},${d.time},${d.cash},${d.total},${d.actual},${d.diff},${d.note}\n`);
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
                     link.setAttribute("href", url);
-                    link.setAttribute("download", "對帳紀錄.csv");
+                    link.setAttribute("download", "對帳報表.csv");
                     link.click();
-                },
-                deleteEntry(index) { if (prompt("密碼：") === PWD) { this.dailyData.splice(index, 1); localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); } },
-                editEntry(index) {
-                    if (prompt("密碼：") === PWD) {
-                        this.form = { ...this.dailyData[index] };
-                        this.editIndex = index;
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
                 }
             }
         }).mount('#app')
