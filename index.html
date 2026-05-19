@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <button @click="exportCSV" class="w-full mt-4 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出所有資料為 CSV</button>
+        <button @click="exportCSV" class="w-full mt-4 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出所有資料為 CSV (Excel)</button>
 
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
             <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
@@ -132,8 +132,11 @@
                     this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 },
                 exportCSV() {
-                    let csv = '日期,時間,現金,熊貓,UBER,LinePay,全支付,總收入,實際,帳差,備註\n';
-                    this.dailyData.forEach(d => csv += `${d.date},${d.time},${d.cash},${d.panda},${d.uber},${d.lp},${d.allpay},${d.total},${d.actual},${d.diff},${d.note}\n`);
+                    let csv = '\ufeff' + '日期,時間,現金,熊貓,UBER,LinePay,全支付,總收入,實際,帳差,備註\n';
+                    this.dailyData.forEach(d => {
+                        const note = (d.note || '').replace(/,/g, '，');
+                        csv += `${d.date},${d.time},${d.cash},${d.panda},${d.uber},${d.lp},${d.allpay},${d.total},${d.actual},${d.diff},${note}\n`;
+                    });
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
