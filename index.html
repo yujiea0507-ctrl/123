@@ -20,10 +20,13 @@
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
                 </div>
+                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
                 <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
                 <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
+                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
                 <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
                 <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
+                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
                 <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
             </div>
@@ -42,14 +45,22 @@
             <div class="space-y-3">
                 <details v-for="(day, index) in data.entries" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
                     <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                        <div>{{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span></div>
-                        <div class="text-right text-xs"><span class="block">營收: {{ day.total }}</span><span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span></div>
+                        <div>
+                            {{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span>
+                        </div>
+                        <div class="text-right text-xs">
+                            <span class="block">營收: {{ day.total }}</span>
+                            <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
+                        </div>
                     </summary>
                     <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2 border-t pt-3">
                         <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
                         <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
                         <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
-                        <div class="flex gap-4 mt-2 col-span-2"><button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button><button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button></div>
+                        <div class="flex gap-4 mt-2 col-span-2">
+                            <button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button>
+                            <button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button>
+                        </div>
                     </div>
                 </details>
             </div>
@@ -118,6 +129,7 @@
                     }
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
+                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 },
                 deleteEntry(index) { if (prompt("密碼：") === PWD) { this.dailyData.splice(index, 1); localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); } },
                 editEntry(index) {
