@@ -3,34 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>店務管理系統</title>
+    <title>店務對帳系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>body { background-color: #FDFBF7; color: #4A3F35; }</style>
 </head>
 <body>
     <div id="app" class="max-w-md mx-auto p-4 min-h-screen">
-        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">財務輸入系統</h1></header>
+        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">每日對帳輸入</h1></header>
 
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
-            <h2 class="font-bold mb-3">新增今日帳目</h2>
             <div class="grid grid-cols-2 gap-3">
                 <input v-model.number="form.cash" type="number" placeholder="現金" class="p-2 border rounded">
                 <input v-model.number="form.panda" type="number" placeholder="熊貓" class="p-2 border rounded">
                 <input v-model.number="form.uber" type="number" placeholder="UBER" class="p-2 border rounded">
                 <input v-model.number="form.lp" type="number" placeholder="LinePay" class="p-2 border rounded">
                 <input v-model.number="form.allpay" type="number" placeholder="全支付" class="p-2 border rounded">
-                <button @click="addData" class="bg-[#6F4E37] text-white rounded-lg font-bold">送出</button>
+                <input v-model.number="form.actual" type="number" placeholder="交班實際金額" class="p-2 border rounded col-span-2 border-[#6F4E37]">
+                <button @click="addData" class="col-span-2 bg-[#6F4E37] text-white p-2 rounded-lg font-bold">送出並計算帳差</button>
             </div>
         </div>
 
         <div class="space-y-4">
             <div v-for="day in dailyData" :key="day.date" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
-                <div class="font-bold mb-2">{{ day.date }}</div>
-                <div class="grid grid-cols-3 gap-2 text-xs text-gray-600">
-                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p> <p>UBER: {{ day.uber }}</p>
-                    <p>LinePay: {{ day.lp }}</p> <p>全支付: {{ day.allpay }}</p>
+                <div class="flex justify-between font-bold mb-2 text-[#6F4E37]">
+                    <span>{{ day.date }}</span>
+                    <span>帳差: {{ day.diff }}</span>
                 </div>
+                <div class="text-sm">系統算總額: {{ day.total }} | 實際交班: {{ day.actual }}</div>
             </div>
         </div>
     </div>
@@ -40,15 +40,21 @@
         createApp({
             data() {
                 return {
-                    form: { cash: '', panda: '', uber: '', lp: '', allpay: '' },
+                    form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 },
                     dailyData: []
                 }
             },
             methods: {
                 addData() {
-                    const newEntry = { ...this.form, date: new Date().toLocaleDateString() };
-                    this.dailyData.unshift(newEntry);
-                    this.form = { cash: '', panda: '', uber: '', lp: '', allpay: '' };
+                    const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
+                    const diff = this.form.actual - total;
+                    this.dailyData.unshift({ 
+                        ...this.form, 
+                        total, 
+                        diff, 
+                        date: new Date().toLocaleDateString() 
+                    });
+                    this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
                 }
             }
         }).mount('#app')
