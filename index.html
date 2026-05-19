@@ -6,46 +6,30 @@
     <title>店務管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>
-        body { background-color: #FDFBF7; color: #4A3F35; } /* 米白色背景 */
-    </style>
+    <style>body { background-color: #FDFBF7; color: #4A3F35; }</style>
 </head>
 <body>
     <div id="app" class="max-w-md mx-auto p-4 min-h-screen">
-        <header class="mb-6">
-            <h1 class="text-2xl font-bold text-[#6F4E37]">五月財務月報</h1>
-        </header>
+        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">財務輸入系統</h1></header>
 
-        <!-- 總覽卡片 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm text-gray-500">本月總收入</p>
-                    <p class="text-xl font-bold text-[#6F4E37]">$ 125,400</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">本月淨利</p>
-                    <p class="text-xl font-bold text-[#8B7355]">$ 42,800</p>
-                </div>
+            <h2 class="font-bold mb-3">新增今日帳目</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <input v-model.number="form.cash" type="number" placeholder="現金" class="p-2 border rounded">
+                <input v-model.number="form.panda" type="number" placeholder="熊貓" class="p-2 border rounded">
+                <input v-model.number="form.uber" type="number" placeholder="UBER" class="p-2 border rounded">
+                <input v-model.number="form.lp" type="number" placeholder="LinePay" class="p-2 border rounded">
+                <input v-model.number="form.allpay" type="number" placeholder="全支付" class="p-2 border rounded">
+                <button @click="addData" class="bg-[#6F4E37] text-white rounded-lg font-bold">送出</button>
             </div>
         </div>
 
-        <!-- 每日對帳卡片 -->
         <div class="space-y-4">
-            <h2 class="font-bold mb-2">每日收支明細</h2>
             <div v-for="day in dailyData" :key="day.date" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold">{{ day.date }}</span>
-                    <span class="text-xs px-2 py-1 bg-[#FDFBF7] border rounded" :class="day.diff === 0 ? 'text-green-600' : 'text-red-500'">
-                        帳差: {{ day.diff }}
-                    </span>
-                </div>
+                <div class="font-bold mb-2">{{ day.date }}</div>
                 <div class="grid grid-cols-3 gap-2 text-xs text-gray-600">
-                    <p>現金: {{ day.cash }}</p>
-                    <p>熊貓: {{ day.panda }}</p>
-                    <p>UBER: {{ day.uber }}</p>
-                    <p>LinePay: {{ day.lp }}</p>
-                    <p>全支付: {{ day.allpay }}</p>
+                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p> <p>UBER: {{ day.uber }}</p>
+                    <p>LinePay: {{ day.lp }}</p> <p>全支付: {{ day.allpay }}</p>
                 </div>
             </div>
         </div>
@@ -56,10 +40,15 @@
         createApp({
             data() {
                 return {
-                    dailyData: [
-                        { date: '05/20', cash: 2000, panda: 1500, uber: 800, lp: 3000, allpay: 500, diff: 0 },
-                        { date: '05/19', cash: 1800, panda: 1200, uber: 900, lp: 2500, allpay: 200, diff: -50 }
-                    ]
+                    form: { cash: '', panda: '', uber: '', lp: '', allpay: '' },
+                    dailyData: []
+                }
+            },
+            methods: {
+                addData() {
+                    const newEntry = { ...this.form, date: new Date().toLocaleDateString() };
+                    this.dailyData.unshift(newEntry);
+                    this.form = { cash: '', panda: '', uber: '', lp: '', allpay: '' };
                 }
             }
         }).mount('#app')
