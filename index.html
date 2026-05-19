@@ -28,6 +28,12 @@
                 <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
                 <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
+                <label class="text-xs text-gray-500 col-span-2">備註 (選填)</label>
+                <input v-model="form.note" placeholder="例如：少拿零錢..." class="p-2 border rounded col-span-2">
+                
+                <p v-if="Math.abs(form.actual - (form.cash + form.panda + form.uber + form.lp + form.allpay)) > 500 && form.actual > 0" 
+                   class="col-span-2 text-red-500 text-xs font-bold text-center">⚠️ 注意：帳差較大，請核對金額！</p>
+                
                 <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
             </div>
         </div>
@@ -41,31 +47,25 @@
                     <p>全支付: {{ data.allpay }}</p> <p class="font-bold text-white border-t border-white/30 pt-1">總收入: {{ data.total }}</p>
                 </div>
             </div>
-            
             <div class="space-y-3">
                 <details v-for="(day, index) in data.entries" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
                     <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                        <div>
-                            {{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span>
-                        </div>
-                        <div class="text-right text-xs">
-                            <span class="block">營收: {{ day.total }}</span>
-                            <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
-                        </div>
+                        <div>{{ day.date.split('/')[2] }}日 <span class="text-xs font-normal text-gray-400">{{ day.time }}</span></div>
+                        <div class="text-right text-xs"><span class="block">營收: {{ day.total }}</span><span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span></div>
                     </summary>
-                    <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2 border-t pt-3">
-                        <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
-                        <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
-                        <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
-                        <div class="flex gap-4 mt-2 col-span-2">
-                            <button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button>
-                            <button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button>
-                        </div>
+                    <div class="p-4 pt-0 text-sm text-gray-600 border-t pt-3">
+                        <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
+                        <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
+                        <p class="font-bold text-[#6F4E37] mt-1">實際: {{ day.actual }}</p>
+                        <p v-if="day.note" class="text-xs text-gray-400 mt-1 italic">備註: {{ day.note }}</p>
+                        <div class="flex gap-4 mt-3"><button @click="editEntry(day.originalIndex)" class="text-blue-600 underline">編輯</button><button @click="deleteEntry(day.originalIndex)" class="text-red-600 underline">刪除</button></div>
                     </div>
                 </details>
             </div>
         </div>
-        
+
+        <button @click="exportCSV" class="w-full mt-4 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出所有資料為 CSV</button>
+
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
             <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
                 <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算</h3>
@@ -88,7 +88,7 @@
         const PWD = '0000';
         createApp({
             data() { return { 
-                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
+                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' }, 
                 coins: { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 },
                 showModal: false,
                 dailyData: JSON.parse(localStorage.getItem('myDailyData') || '[]'),
@@ -128,8 +128,18 @@
                         this.dailyData.unshift({ ...this.form, total, diff, date: now.toLocaleDateString(), time: now.getHours()+':'+now.getMinutes().toString().padStart(2,'0') });
                     }
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
-                    this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
+                    this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' };
                     this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
+                },
+                exportCSV() {
+                    let csv = '日期,時間,現金,熊貓,UBER,LinePay,全支付,總收入,實際,帳差,備註\n';
+                    this.dailyData.forEach(d => csv += `${d.date},${d.time},${d.cash},${d.panda},${d.uber},${d.lp},${d.allpay},${d.total},${d.actual},${d.diff},${d.note}\n`);
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "對帳紀錄.csv");
+                    link.click();
                 },
                 deleteEntry(index) { if (prompt("密碼：") === PWD) { this.dailyData.splice(index, 1); localStorage.setItem('myDailyData', JSON.stringify(this.dailyData)); } },
                 editEntry(index) {
