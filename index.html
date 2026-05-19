@@ -1,80 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <title>店務 ERP 系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>body { background-color: #FDFBF7; color: #4A3F35; }</style>
-</head>
-<body>
-    <div id="app" class="max-w-md mx-auto p-4 min-h-screen pb-20">
-        <header class="mb-6"><h1 class="text-2xl font-bold text-[#6F4E37]">店務管理 ERP</h1></header>
-
-        <div class="flex bg-white p-1 rounded-xl shadow-sm mb-6 border border-[#EBE3D5]">
-            <button @click="currentTab = 'daily'" :class="currentTab === 'daily' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">每日對帳</button>
-            <button @click="currentTab = 'ab'" :class="currentTab === 'ab' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">庫存與盤點</button>
-        </div>
-
-        <div v-if="currentTab === 'ab'">
-            <div class="space-y-4">
-                <div v-for="(item, idx) in inventory" :key="idx" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold text-[#6F4E37]">{{ item.name }}</span>
-                        <span class="text-xs">帳面庫存: <strong class="text-[#6F4E37]">{{ item.stock }}</strong></span>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input v-model.number="item.qty" type="number" placeholder="數量" class="p-2 border rounded">
-                        <div class="flex gap-1">
-                            <button @click="updateStock(idx, 'out')" class="flex-1 bg-red-100 text-red-700 text-xs rounded font-bold">領料</button>
-                            <button @click="updateStock(idx, 'in')" class="flex-1 bg-green-100 text-green-700 text-xs rounded font-bold">補貨</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 p-2 rounded flex items-center justify-between mt-2">
-                        <input v-model.number="item.actualCount" type="number" placeholder="實際盤點量" class="p-1 w-20 border rounded text-xs">
-                        <button @click="checkInventory(idx)" class="bg-[#6F4E37] text-white px-3 py-1 text-xs rounded">盤點確認</button>
-                        <span :class="item.diff >= 0 ? 'text-green-600' : 'text-red-600'" class="text-xs font-bold">
-                            {{ item.diff !== undefined ? (item.diff >= 0 ? '盈:' : '虧:') + Math.abs(item.diff) : '' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-6 text-center text-xs text-gray-400">※ 盤點確認後，系統將以實際盤點量覆蓋帳面庫存</div>
-        </div>
-    </div>
-
-    <script>
-        const { createApp } = Vue;
-        createApp({
-            data() { return { 
-                currentTab: 'ab',
-                inventory: JSON.parse(localStorage.getItem('inv') || '[{"name":"三角骨","stock":50,"qty":0,"actualCount":0,"diff":0},{"name":"鹽酥雞","stock":50,"qty":0,"actualCount":0,"diff":0}]')
-            }},
-            methods: {
-                updateStock(idx, type) {
-                    const item = this.inventory[idx];
-                    if (item.qty <= 0) return;
-                    if (type === 'out') item.stock -= item.qty;
-                    else item.stock += item.qty;
-                    item.qty = 0;
-                    this.save();
-                },
-                checkInventory(idx) {
-                    const item = this.inventory[idx];
-                    item.diff = item.actualCount - item.stock;
-                    if (confirm(`確認盤點結果：帳面 ${item.stock}，實盤 ${item.actualCount}，差額 ${item.diff}？`)) {
-                        item.stock = item.actualCount; // 修正庫存
-                        this.save();
-                    }
-                },
-                save() {
-                    localStorage.setItem('inv', JSON.stringify(this.inventory));
-                }
-            }
-        }).mount('#app')
-    </script>
-</body>
-</html>
+// 我在程式碼中加入這一小段檢查，它會把失蹤的資料自動抓出來！
+mounted() {
+    // 檢查有沒有舊資料
+    const oldData1 = localStorage.getItem('myDailyData');
+    const oldData2 = localStorage.getItem('dailyData');
+    
+    // 如果有舊資料，但現在的 dailyData 是空的，就把它抓回來
+    if (oldData1 && !oldData2) {
+        localStorage.setItem('dailyData', oldData1);
+        this.dailyData = JSON.parse(oldData1);
+        alert("找到舊資料了！已自動恢復！");
+    } else if (oldData2) {
+        this.dailyData = JSON.parse(oldData2);
+    }
+}
