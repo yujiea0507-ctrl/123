@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         const { createApp } = Vue;
         createApp({
             data() { return { 
@@ -86,30 +86,39 @@
                 addData() {
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
+                    
                     if (this.editIndex !== null) {
+                        // 編輯模式：更新舊資料
                         this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date };
                         this.editIndex = null;
+                        alert("修改成功！");
                     } else {
+                        // 新增模式
                         this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
                     }
+                    
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
+                    this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 },
                 deleteEntry(index) {
                     if (prompt("輸入密碼以刪除：") === '03040507') {
                         this.dailyData.splice(index, 1);
                         localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
-                    }
+                    } else { alert("密碼錯誤"); }
                 },
                 editEntry(index) {
                     if (prompt("輸入密碼以編輯：") === '03040507') {
+                        // 複製資料到 form
                         this.form = { ...this.dailyData[index] };
                         this.editIndex = index;
+                        // 滾動到上方編輯區
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    } else { alert("密碼錯誤"); }
                 }
             }
         }).mount('#app')
     </script>
+
 </body>
 </html>
