@@ -29,17 +29,17 @@
         </div>
 
         <div class="space-y-4">
-            <div v-for="day in dailyData" :key="day.date" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
-                <div class="flex justify-between font-bold mb-3 border-b pb-2">
-                    <span class="text-[#6F4E37]">{{ day.date }}</span>
-                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-y-1 text-sm text-gray-600">
+            <details v-for="day in dailyData" :key="day.date" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5] overflow-hidden">
+                <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37] outline-none">
+                    <span>{{ day.date }}</span>
+                    <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">總額: {{ day.total }} | 帳差: {{ day.diff }}</span>
+                </summary>
+                <div class="p-4 pt-0 border-t border-[#EBE3D5] text-sm text-gray-600 grid grid-cols-2 gap-y-1">
                     <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
                     <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
-                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
+                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
                 </div>
-            </div>
+            </details>
         </div>
     </div>
 
