@@ -2,7 +2,6 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>店務 ERP 系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -14,81 +13,65 @@
 
         <div class="flex bg-white p-1 rounded-xl shadow-sm mb-6 border border-[#EBE3D5]">
             <button @click="currentTab = 'daily'" :class="currentTab === 'daily' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">每日對帳</button>
-            <button @click="currentTab = 'ab'" :class="currentTab === 'ab' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">A/B庫存</button>
+            <button @click="currentTab = 'ab'" :class="currentTab === 'ab' ? 'bg-[#6F4E37] text-white' : 'text-gray-500'" class="flex-1 py-2 rounded-lg font-bold">庫存與盤點</button>
         </div>
-
-        <div v-if="currentTab === 'daily'">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5] mb-6">
-                <div class="grid grid-cols-2 gap-3">
-                    <button @click="showModal = true" class="col-span-2 p-3 bg-[#EBE3D5] rounded-lg font-bold text-[#6F4E37] border-2 border-[#6F4E37]">
-                        {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
-                    </button>
-                    <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
-                    <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
-                    <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
-                    <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
-                    <input v-model.number="form.actual" placeholder="實際總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
-                    <input v-model="form.note" placeholder="備註..." class="p-2 border rounded col-span-2">
-                    <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
-                </div>
-            </div>
-            </div>
 
         <div v-if="currentTab === 'ab'">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#EBE3D5]">
-                <h2 class="font-bold text-[#6F4E37] mb-4 border-b pb-2">A表：庫存物料管理</h2>
-                <div v-for="(item, index) in inventory" :key="index" class="grid grid-cols-3 gap-2 mb-3 items-center">
-                    <span class="text-sm font-bold truncate">{{ item.name }}</span>
-                    <input v-model.number="item.used" type="number" placeholder="用量" class="p-1 border rounded text-center">
-                    <span class="text-xs text-gray-500">剩 {{ item.stock - item.used }}</span>
-                </div>
-                <button @click="saveInventory" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">更新庫存</button>
-            </div>
-        </div>
+            <div class="space-y-4">
+                <div v-for="(item, idx) in inventory" :key="idx" class="bg-white p-4 rounded-xl shadow-sm border border-[#EBE3D5]">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-[#6F4E37]">{{ item.name }}</span>
+                        <span class="text-xs">帳面庫存: <strong class="text-[#6F4E37]">{{ item.stock }}</strong></span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input v-model.number="item.qty" type="number" placeholder="數量" class="p-2 border rounded">
+                        <div class="flex gap-1">
+                            <button @click="updateStock(idx, 'out')" class="flex-1 bg-red-100 text-red-700 text-xs rounded font-bold">領料</button>
+                            <button @click="updateStock(idx, 'in')" class="flex-1 bg-green-100 text-green-700 text-xs rounded font-bold">補貨</button>
+                        </div>
+                    </div>
 
-        <button @click="exportCSV" class="w-full mt-6 bg-gray-200 text-gray-700 p-2 rounded-lg text-sm">匯出 CSV 報表</button>
+                    <div class="bg-gray-50 p-2 rounded flex items-center justify-between mt-2">
+                        <input v-model.number="item.actualCount" type="number" placeholder="實際盤點量" class="p-1 w-20 border rounded text-xs">
+                        <button @click="checkInventory(idx)" class="bg-[#6F4E37] text-white px-3 py-1 text-xs rounded">盤點確認</button>
+                        <span :class="item.diff >= 0 ? 'text-green-600' : 'text-red-600'" class="text-xs font-bold">
+                            {{ item.diff !== undefined ? (item.diff >= 0 ? '盈:' : '虧:') + Math.abs(item.diff) : '' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center text-xs text-gray-400">※ 盤點確認後，系統將以實際盤點量覆蓋帳面庫存</div>
+        </div>
     </div>
 
     <script>
         const { createApp } = Vue;
         createApp({
             data() { return { 
-                currentTab: 'daily',
-                form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' },
-                inventory: [
-                    { name: '三角骨', stock: 100, used: 0 },
-                    { name: '鹽酥雞', stock: 100, used: 0 },
-                    { name: '魷魚圈', stock: 80, used: 0 },
-                    { name: '八盎司', stock: 50, used: 0 },
-                    { name: '花蟹', stock: 30, used: 0 }
-                ],
-                dailyData: JSON.parse(localStorage.getItem('dailyData') || '[]'),
-                showModal: false
+                currentTab: 'ab',
+                inventory: JSON.parse(localStorage.getItem('inv') || '[{"name":"三角骨","stock":50,"qty":0,"actualCount":0,"diff":0},{"name":"鹽酥雞","stock":50,"qty":0,"actualCount":0,"diff":0}]')
             }},
             methods: {
-                verifyAndSave() { 
-                    if (prompt("輸入密碼：") === '0000') {
-                        const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
-                        const now = new Date();
-                        this.dailyData.unshift({ ...this.form, total, diff: this.form.actual - total, date: now.toLocaleDateString(), time: now.getHours()+':'+now.getMinutes() });
-                        localStorage.setItem('dailyData', JSON.stringify(this.dailyData));
-                        this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0, note: '' };
-                        alert("記錄成功！");
+                updateStock(idx, type) {
+                    const item = this.inventory[idx];
+                    if (item.qty <= 0) return;
+                    if (type === 'out') item.stock -= item.qty;
+                    else item.stock += item.qty;
+                    item.qty = 0;
+                    this.save();
+                },
+                checkInventory(idx) {
+                    const item = this.inventory[idx];
+                    item.diff = item.actualCount - item.stock;
+                    if (confirm(`確認盤點結果：帳面 ${item.stock}，實盤 ${item.actualCount}，差額 ${item.diff}？`)) {
+                        item.stock = item.actualCount; // 修正庫存
+                        this.save();
                     }
                 },
-                saveInventory() {
-                    localStorage.setItem('inventoryData', JSON.stringify(this.inventory));
-                    alert("庫存已更新！");
-                },
-                exportCSV() {
-                    let csv = '\ufeff' + '日期,時間,現金,總收入,實際,帳差,備註\n';
-                    this.dailyData.forEach(d => csv += `${d.date},${d.time},${d.cash},${d.total},${d.actual},${d.diff},${d.note}\n`);
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", "對帳報表.csv");
-                    link.click();
+                save() {
+                    localStorage.setItem('inv', JSON.stringify(this.inventory));
                 }
             }
         }).mount('#app')
