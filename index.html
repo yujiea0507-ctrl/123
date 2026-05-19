@@ -51,7 +51,7 @@
         <div class="space-y-4">
             <details v-for="(day, index) in dailyData" :key="index" class="bg-white rounded-xl shadow-sm border border-[#EBE3D5]">
                 <summary class="p-4 cursor-pointer font-bold flex justify-between items-center text-[#6F4E37]">
-                    <span>{{ day.date }}</span>
+                    <span>{{ day.date }} <span class="text-xs font-normal text-gray-400">{{ day.time }}</span></span>
                     <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
                 </summary>
                 <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2">
@@ -69,6 +69,7 @@
 
     <script>
         const { createApp } = Vue;
+        const PWD = '0000'; // 統一密碼設定
         createApp({
             data() { return { 
                 form: { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 }, 
@@ -80,7 +81,7 @@
             methods: {
                 verifyAndSave() {
                     const pass = prompt("請輸入管理密碼：");
-                    if (pass === '03040507') { this.addData(); } else { alert("密碼錯誤！"); }
+                    if (pass === PWD) { this.addData(); } else { alert("密碼錯誤！"); }
                 },
                 calcCash() {
                     this.form.cash = (this.coins.c1000*1000) + (this.coins.c500*500) + (this.coins.c100*100) + (this.coins.c50*50) + (this.coins.c10*10) + (this.coins.c5*5) + (this.coins.c1*1);
@@ -89,25 +90,29 @@
                 addData() {
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString();
+                    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
                     if (this.editIndex !== null) {
-                        this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date };
+                        this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date, time: this.dailyData[this.editIndex].time };
                         this.editIndex = null;
                         alert("修改成功！");
                     } else {
-                        this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
+                        this.dailyData.unshift({ ...this.form, total, diff, date: dateStr, time: timeStr });
                     }
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
                     this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
                 },
                 deleteEntry(index) {
-                    if (prompt("輸入密碼以刪除：") === '03040507') {
+                    if (prompt("輸入密碼以刪除：") === PWD) {
                         this.dailyData.splice(index, 1);
                         localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     } else { alert("密碼錯誤"); }
                 },
                 editEntry(index) {
-                    if (prompt("輸入密碼以編輯：") === '03040507') {
+                    if (prompt("輸入密碼以編輯：") === PWD) {
                         this.form = { ...this.dailyData[index] };
                         this.editIndex = index;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
