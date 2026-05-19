@@ -20,12 +20,31 @@
                         {{ form.cash > 0 ? '$ ' + form.cash : '點擊點算現金' }}
                     </button>
                 </div>
+                <label class="text-xs text-gray-500">熊貓</label><label class="text-xs text-gray-500">UBER</label>
                 <input v-model.number="form.panda" placeholder="熊貓" class="p-2 border rounded">
                 <input v-model.number="form.uber" placeholder="UBER" class="p-2 border rounded">
+                <label class="text-xs text-gray-500">LinePay</label><label class="text-xs text-gray-500">全支付</label>
                 <input v-model.number="form.lp" placeholder="LinePay" class="p-2 border rounded">
                 <input v-model.number="form.allpay" placeholder="全支付" class="p-2 border rounded">
+                <label class="text-xs text-gray-500 col-span-2">交班實際總金額</label>
                 <input v-model.number="form.actual" placeholder="實際交班總額" class="p-2 border rounded col-span-2 border-[#6F4E37] border-2">
                 <button @click="verifyAndSave" class="col-span-2 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">送出並記錄</button>
+            </div>
+        </div>
+
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
+            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
+                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算 (張數/個數)</h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center justify-between">1000 元 <input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">500 元 <input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">100 元 <input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">50 元 <input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">10 元 <input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">5 元 <input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
+                    <div class="flex items-center justify-between">1 元 <input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
+                </div>
+                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
             </div>
         </div>
 
@@ -35,36 +54,20 @@
                     <span>{{ day.date }}</span>
                     <span :class="day.diff === 0 ? 'text-green-600' : 'text-red-600'">帳差: {{ day.diff }}</span>
                 </summary>
-                <div class="p-4 pt-0 text-sm text-gray-600">
-                    <p>現金: {{ day.cash }} | 熊貓: {{ day.panda }} | UBER: {{ day.uber }}</p>
-                    <p>LinePay: {{ day.lp }} | 全支付: {{ day.allpay }}</p>
-                    <p class="font-bold text-[#6F4E37]">實際交班: {{ day.actual }}</p>
-                    <div class="flex gap-2 mt-3">
+                <div class="p-4 pt-0 text-sm text-gray-600 grid grid-cols-2 gap-2">
+                    <p>現金: {{ day.cash }}</p> <p>熊貓: {{ day.panda }}</p>
+                    <p>UBER: {{ day.uber }}</p> <p>LinePay: {{ day.lp }}</p>
+                    <p>全支付: {{ day.allpay }}</p> <p class="font-bold text-[#6F4E37]">實際: {{ day.actual }}</p>
+                    <div class="flex gap-4 mt-2 col-span-2">
                         <button @click="editEntry(index)" class="text-blue-600 underline">編輯</button>
                         <button @click="deleteEntry(index)" class="text-red-600 underline">刪除</button>
                     </div>
                 </div>
             </details>
         </div>
-
-        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
-            <div class="bg-white p-4 rounded-2xl w-full max-w-sm">
-                <h3 class="font-bold mb-4 text-[#6F4E37] text-center">現金點算</h3>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="flex items-center justify-between">1000 <input v-model.number="coins.c1000" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">500 <input v-model.number="coins.c500" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">100 <input v-model.number="coins.c100" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">50 <input v-model.number="coins.c50" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">10 <input v-model.number="coins.c10" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">5 <input v-model.number="coins.c5" type="number" class="w-16 p-1 border rounded"></div>
-                    <div class="flex items-center justify-between">1 <input v-model.number="coins.c1" type="number" class="w-16 p-1 border rounded"></div>
-                </div>
-                <button @click="calcCash" class="w-full mt-4 bg-[#6F4E37] text-white p-3 rounded-lg font-bold">確認金額</button>
-            </div>
-        </div>
     </div>
 
-        <script>
+    <script>
         const { createApp } = Vue;
         createApp({
             data() { return { 
@@ -86,17 +89,13 @@
                 addData() {
                     const total = this.form.cash + this.form.panda + this.form.uber + this.form.lp + this.form.allpay;
                     const diff = this.form.actual - total;
-                    
                     if (this.editIndex !== null) {
-                        // 編輯模式：更新舊資料
                         this.dailyData[this.editIndex] = { ...this.form, total, diff, date: this.dailyData[this.editIndex].date };
                         this.editIndex = null;
                         alert("修改成功！");
                     } else {
-                        // 新增模式
                         this.dailyData.unshift({ ...this.form, total, diff, date: new Date().toLocaleDateString() });
                     }
-                    
                     localStorage.setItem('myDailyData', JSON.stringify(this.dailyData));
                     this.form = { cash: 0, panda: 0, uber: 0, lp: 0, allpay: 0, actual: 0 };
                     this.coins = { c1000: 0, c500: 0, c100: 0, c50: 0, c10: 0, c5: 0, c1: 0 };
@@ -109,16 +108,13 @@
                 },
                 editEntry(index) {
                     if (prompt("輸入密碼以編輯：") === '03040507') {
-                        // 複製資料到 form
                         this.form = { ...this.dailyData[index] };
                         this.editIndex = index;
-                        // 滾動到上方編輯區
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else { alert("密碼錯誤"); }
                 }
             }
         }).mount('#app')
     </script>
-
 </body>
 </html>
